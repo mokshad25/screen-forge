@@ -23,7 +23,8 @@ API_DIR = Path(__file__).resolve().parent.parent
 if str(API_DIR) not in sys.path:
     sys.path.insert(0, str(API_DIR))
 
-import context_store  # noqa: E402
+import context_store
+from helpers import without_tag  # noqa: E402
 import generator  # noqa: E402
 import reconciler  # noqa: E402
 
@@ -122,11 +123,7 @@ def test_an_unknown_previous_version_is_ignored_rather_than_guessed():
 
 def test_removed_tags_are_called_out_as_unbindable():
     context = context_store.get_context(CHILLER)
-    context_store.reload_context(CHILLER, {
-        **context,
-        "context_version": "chiller1@v5",
-        "tags": [t for t in context["tags"] if t["name"] != "Condenser_Pressure"],
-    })
+    context_store.reload_context(CHILLER, without_tag(context, "Condenser_Pressure", "chiller1@v5"))
     fake_llm, seen = _capture_prompt()
 
     generator.generate_and_validate(

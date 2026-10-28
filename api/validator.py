@@ -55,9 +55,21 @@ ALLOWED_COMPONENT_TYPES = {
     "alarm_banner",
     "status_indicator",
     "gauge",
+    "numeric_readout",
     "trend",
+    "multi_trend",
     "nav_tile",
     "comms_health",
+}
+
+# Which tag type each tag-bound component can display. A gauge on a bool, or
+# a status light on a pressure, would render but mean nothing to an operator.
+TAG_TYPE_FOR_COMPONENT = {
+    "status_indicator": "bool",
+    "gauge": "analog",
+    "numeric_readout": "analog",
+    "trend": "analog",
+    "multi_trend": "analog",
 }
 
 # Component types that can write to a tag. Empty today -- no component in the
@@ -66,7 +78,7 @@ ALLOWED_COMPONENT_TYPES = {
 WRITE_CAPABLE_TYPES: set[str] = set()
 
 # The four binding fields; a component must carry exactly one of them.
-_BIND_FIELDS = ("bind_tag", "bind_alarms", "bind_device", "bind_asset")
+_BIND_FIELDS = ("bind_tag", "bind_tags", "bind_alarms", "bind_device", "bind_asset")
 
 
 @dataclass
@@ -112,6 +124,8 @@ def _layer2_whitelist(spec: dict) -> list[str]:
     # Tag name -> its declared access ("read" or "write"), so a display
     # component can be rejected for binding a write-only command tag.
     tag_access = {t["name"]: t["access"] for t in context["tags"]}
+    tag_type = {t["name"]: t["type"] for t in context["tags"]}
+    tag_unit = {t["name"]: t.get("unit") for t in context["tags"]}
 
     # Component ids must be unique within a screen; a repeated id makes the
     # rendered screen and any later id-based lookup ambiguous.
@@ -148,17 +162,36 @@ def _layer2_whitelist(spec: dict) -> list[str]:
             # for this component.
             continue
 
+        bound_tags = []
         if "bind_tag" in component:
-            tag = component["bind_tag"]
+            bound_tags = [("bind_tag", component["bind_tag"])]
+        elif "bind_tags" in component:
+            bound_tags = [("bind_tags", t) for t in component["bind_tags"]]
+
+        wanted_type = TAG_TYPE_FOR_COMPONENT.get(ctype)
+        for field_name, tag in bound_tags:
             if tag not in known_tags:
                 errors.append(
-                    f"component {cid}: bind_tag {tag!r} not found in context tags "
+                    f"component {cid}: {field_name} {tag!r} not found in context tags "
                     f"for asset {asset_id}"
                 )
             elif tag_access.get(tag) == "write":
                 errors.append(
-                    f"component {cid}: bind_tag {tag!r} is a write-access tag; "
+                    f"component {cid}: {field_name} {tag!r} is a write-access tag; "
                     "display components may not bind command tags"
+                )
+            elif wanted_type and tag_type[tag] != wanted_type:
+                errors.append(
+                    f"component {cid}: {ctype} needs {'an' if wanted_type == 'analog' else 'a'} "
+                    f"{wanted_type} tag, but {tag!r} is {tag_type[tag]}"
+                )
+
+        if ctype == "multi_trend" and "bind_tags" in component:
+            units = {tag_unit.get(t) for t in component["bind_tags"] if t in known_tags}
+            if len(units) > 1:
+                errors.append(
+                    f"component {cid}: multi_trend mixes units {sorted(str(u) for u in units)}; "
+                    "signals on one chart must share a unit, so the axis means one thing"
                 )
 
         if "bind_alarms" in component:

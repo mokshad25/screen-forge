@@ -1,17 +1,31 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://screenforge.dev/contracts/screen-spec/v2",
   "title": "ScreenForge Screen Specification",
+  "description": "What the model is allowed to say about a screen. No position, size, colour or font fields: layout is computed by the renderer from priority, size_hint and min_panel. v2 adds numeric_readout, multi_trend and origin.",
   "type": "object",
   "required": ["screen_id", "title", "asset_id", "context_version", "components", "permissions"],
   "additionalProperties": false,
   "properties": {
     "screen_id": { "type": "string" },
-    "title": { "type": "string" },
+    "title": { "type": "string", "maxLength": 80 },
     "asset_id": { "type": "string" },
     "context_version": { "type": "string" },
+    "origin": {
+      "description": "How this screen came to exist. Informational; never affects layout.",
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "type": "string", "enum": ["prompt", "edit", "alarm", "regenerate", "library"] },
+        "alarm_id": { "type": "string" },
+        "instruction": { "type": "string" }
+      }
+    },
     "components": {
       "type": "array",
       "minItems": 1,
+      "maxItems": 12,
       "items": { "$ref": "#/definitions/component" }
     },
     "permissions": {
@@ -32,9 +46,16 @@
         "id": { "type": "string" },
         "type": {
           "type": "string",
-          "enum": ["alarm_banner", "status_indicator", "gauge", "trend", "nav_tile", "comms_health"]
+          "enum": ["alarm_banner", "status_indicator", "gauge", "numeric_readout", "trend", "multi_trend", "nav_tile", "comms_health"]
         },
         "bind_tag": { "type": "string" },
+        "bind_tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 2,
+          "maxItems": 4,
+          "uniqueItems": true
+        },
         "bind_alarms": {
           "type": "array",
           "items": { "type": "string" },
@@ -42,7 +63,7 @@
         },
         "bind_device": { "type": "string" },
         "bind_asset": { "type": "string" },
-        "priority": { "type": "integer", "minimum": 1 },
+        "priority": { "type": "integer", "minimum": 1, "maximum": 99 },
         "size_hint": { "type": "string", "enum": ["compact", "medium", "wide"] },
         "min_panel": { "type": "string", "enum": ["small", "medium", "large"] }
       },
@@ -51,28 +72,35 @@
           "if": { "properties": { "type": { "const": "alarm_banner" } }, "required": ["type"] },
           "then": {
             "required": ["bind_alarms"],
-            "not": { "anyOf": [{ "required": ["bind_tag"] }, { "required": ["bind_device"] }, { "required": ["bind_asset"] }] }
+            "not": { "anyOf": [{ "required": ["bind_tag"] }, { "required": ["bind_tags"] }, { "required": ["bind_device"] }, { "required": ["bind_asset"] }] }
           }
         },
         {
           "if": { "properties": { "type": { "const": "comms_health" } }, "required": ["type"] },
           "then": {
             "required": ["bind_device"],
-            "not": { "anyOf": [{ "required": ["bind_tag"] }, { "required": ["bind_alarms"] }, { "required": ["bind_asset"] }] }
+            "not": { "anyOf": [{ "required": ["bind_tag"] }, { "required": ["bind_tags"] }, { "required": ["bind_alarms"] }, { "required": ["bind_asset"] }] }
           }
         },
         {
           "if": { "properties": { "type": { "const": "nav_tile" } }, "required": ["type"] },
           "then": {
             "required": ["bind_asset"],
-            "not": { "anyOf": [{ "required": ["bind_tag"] }, { "required": ["bind_alarms"] }, { "required": ["bind_device"] }] }
+            "not": { "anyOf": [{ "required": ["bind_tag"] }, { "required": ["bind_tags"] }, { "required": ["bind_alarms"] }, { "required": ["bind_device"] }] }
           }
         },
         {
-          "if": { "properties": { "type": { "enum": ["status_indicator", "gauge", "trend"] } }, "required": ["type"] },
+          "if": { "properties": { "type": { "enum": ["status_indicator", "gauge", "numeric_readout", "trend"] } }, "required": ["type"] },
           "then": {
             "required": ["bind_tag"],
-            "not": { "anyOf": [{ "required": ["bind_alarms"] }, { "required": ["bind_device"] }, { "required": ["bind_asset"] }] }
+            "not": { "anyOf": [{ "required": ["bind_tags"] }, { "required": ["bind_alarms"] }, { "required": ["bind_device"] }, { "required": ["bind_asset"] }] }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "multi_trend" } }, "required": ["type"] },
+          "then": {
+            "required": ["bind_tags"],
+            "not": { "anyOf": [{ "required": ["bind_tag"] }, { "required": ["bind_alarms"] }, { "required": ["bind_device"] }, { "required": ["bind_asset"] }] }
           }
         }
       ]

@@ -2,14 +2,24 @@
   "asset_id": "line1.conveyorA",
   "context_version": "conveyorA@v3",
   "asset_hierarchy": ["Plant", "Line 1", "Conveyor A"],
+  "aliases": ["conveyor", "belt", "line 1", "line1", "motor 1"],
   "tags": [
-    { "name": "Motor_1_RunStatus", "type": "bool", "access": "read" },
-    { "name": "Conveyor_Speed_SP", "type": "analog", "unit": "m/s", "access": "read" },
-    { "name": "Temperature_PV", "type": "analog", "unit": "degC", "access": "read" },
-    { "name": "Motor_Start", "type": "bool", "access": "write" },
-    { "name": "Pressure_Sensor", "type": "analog", "unit": "bar", "access": "read" },
-    { "name": "PLC1_Health", "type": "bool", "access": "read" },
-    { "name": "VFD1_Health", "type": "bool", "access": "read" }
+    { "name": "Motor_1_RunStatus", "type": "bool", "access": "read", "description": "Drive motor running",
+      "source": { "protocol": "modbus", "device": "PLC1", "address": "coil:0" } },
+    { "name": "Conveyor_Speed_SP", "type": "analog", "unit": "m/s", "access": "read", "description": "Belt speed setpoint",
+      "range": { "low": 0, "high": 2.5 },
+      "source": { "protocol": "modbus", "device": "PLC1", "address": "0", "scale": 0.01 } },
+    { "name": "Temperature_PV", "type": "analog", "unit": "degC", "access": "read", "description": "Motor winding temperature",
+      "range": { "low": 0, "high": 100 },
+      "source": { "protocol": "modbus", "device": "PLC1", "address": "1", "scale": 0.1 } },
+    { "name": "Motor_Start", "type": "bool", "access": "write", "description": "Motor start command" },
+    { "name": "Pressure_Sensor", "type": "analog", "unit": "bar", "access": "read", "description": "Pneumatic take-up pressure",
+      "range": { "low": 0, "high": 6 },
+      "source": { "protocol": "modbus", "device": "PLC1", "address": "2", "scale": 0.01 } },
+    { "name": "PLC1_Health", "type": "bool", "access": "read", "description": "PLC1 link healthy",
+      "source": { "protocol": "connection", "address": "PLC1" } },
+    { "name": "VFD1_Health", "type": "bool", "access": "read", "description": "VFD1 link healthy, as reported by PLC1",
+      "source": { "protocol": "modbus", "device": "PLC1", "address": "coil:1" } }
   ],
   "io": {
     "digital_in": ["Emergency_Stop", "Door_Switch"],
@@ -18,12 +28,18 @@
     "analog_out": ["Speed_Reference", "Valve_Position"]
   },
   "alarms": [
-    { "id": "ALM_HT01", "desc": "High Temperature", "priority": "Critical", "tag": "Temperature_PV" },
-    { "id": "ALM_LP01", "desc": "Low Pressure", "priority": "Warning", "tag": "Pressure_Sensor" },
-    { "id": "ALM_MT01", "desc": "Motor Trip", "priority": "High", "tag": "Motor_1_RunStatus" }
+    { "id": "ALM_HT01", "desc": "High Temperature", "priority": "Critical", "tag": "Temperature_PV",
+      "condition": { "op": ">", "value": 60 },
+      "related_tags": ["Motor_1_RunStatus", "Conveyor_Speed_SP"] },
+    { "id": "ALM_LP01", "desc": "Low Pressure", "priority": "Warning", "tag": "Pressure_Sensor",
+      "condition": { "op": "<", "value": 2.0 },
+      "related_tags": ["Conveyor_Speed_SP", "Motor_1_RunStatus"] },
+    { "id": "ALM_MT01", "desc": "Motor Trip", "priority": "High", "tag": "Motor_1_RunStatus",
+      "condition": { "op": "==", "value": false },
+      "related_tags": ["Temperature_PV", "VFD1_Health", "Conveyor_Speed_SP"] }
   ],
   "comms": [
-    { "device": "PLC1", "protocol": "Modbus TCP", "endpoint": "10.10.1.20", "health_tag": "PLC1_Health" },
+    { "device": "PLC1", "protocol": "Modbus TCP", "endpoint": "modbus-tcp://127.0.0.1:5020/1", "health_tag": "PLC1_Health" },
     { "device": "VFD1", "protocol": "EtherNet/IP", "endpoint": "10.10.1.30", "health_tag": "VFD1_Health" }
   ]
 }

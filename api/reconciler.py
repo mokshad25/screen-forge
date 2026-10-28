@@ -21,14 +21,33 @@ Nothing here repairs a spec. It reports; regenerating is the caller's call.
 import context_store
 import validator
 
-# The tag the machine-change demo adds to a context at runtime. Kept here
-# beside the bump logic rather than in a fixture, because contracts/ is frozen
-# and this is a runtime event, not a contract.
+# What the machine-change demo fits to a machine at runtime: a vibration
+# sensor and its alarm. 7.1 mm/s RMS is the ISO 10816-3 boundary between
+# "restricted operation" and "damage occurs" for medium machines on rigid
+# foundations -- a threshold a maintenance engineer would recognise.
 DEMO_TAG = {
     "name": "Vibration_PV",
     "type": "analog",
     "unit": "mm/s",
     "access": "read",
+    "description": "Compressor bearing vibration (RMS)",
+    "range": {"low": 0, "high": 20},
+}
+# Where the demo sensor is read from, per machine, when values come from the
+# simulated plant over OPC UA (SCREENFORGE_TAG_SOURCE=live).
+DEMO_SOURCES = {
+    "plant.utilities.chiller1": {
+        "protocol": "opcua", "device": "BMS_Gateway", "address": "ns=2;s=Chiller1.Vibration_PV",
+    },
+}
+
+DEMO_ALARM = {
+    "id": "ALM_VB01",
+    "desc": "High Vibration",
+    "priority": "High",
+    "tag": "Vibration_PV",
+    "condition": {"op": ">", "value": 7.1},
+    "related_tags": [],
 }
 
 
@@ -57,6 +76,7 @@ def _broken_bindings(spec: dict, context: dict) -> list[dict]:
     """
     known = {
         "bind_tag": _names(context["tags"], "name"),
+        "bind_tags": _names(context["tags"], "name"),
         "bind_alarms": _names(context["alarms"], "id"),
         "bind_device": _names(context["comms"], "device"),
         "bind_asset": set(context_store.list_asset_ids()),
@@ -120,6 +140,13 @@ def _next_version(context_version: str) -> str:
     return f"{context_version}+1"
 
 
+def _demo_tag_for(asset_id: str) -> dict:
+    tag = dict(DEMO_TAG)
+    if asset_id in DEMO_SOURCES:
+        tag["source"] = dict(DEMO_SOURCES[asset_id])
+    return tag
+
+
 def bump_context(asset_id: str) -> dict:
     """
     The machine change itself: add the demo sensor and move the version on.
@@ -146,7 +173,8 @@ def bump_context(asset_id: str) -> dict:
     updated = {
         **current,
         "context_version": _next_version(current["context_version"]),
-        "tags": [*current["tags"], dict(DEMO_TAG)],
+        "tags": [*current["tags"], _demo_tag_for(asset_id)],
+        "alarms": [*current["alarms"], dict(DEMO_ALARM)],
     }
     context_store.reload_context(asset_id, updated)
 

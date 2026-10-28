@@ -2,16 +2,30 @@
   "asset_id": "plant.utilities.chiller1",
   "context_version": "chiller1@v1",
   "asset_hierarchy": ["Plant", "Utilities", "Chiller 1"],
+  "aliases": ["chiller", "chilled water", "refrigeration"],
   "tags": [
-    { "name": "Compressor_RunStatus", "type": "bool", "access": "read" },
-    { "name": "Chilled_Water_Supply_Temp", "type": "analog", "unit": "degC", "access": "read" },
-    { "name": "Chilled_Water_Return_Temp", "type": "analog", "unit": "degC", "access": "read" },
-    { "name": "Condenser_Pressure", "type": "analog", "unit": "bar", "access": "read" },
-    { "name": "Evaporator_Pressure", "type": "analog", "unit": "bar", "access": "read" },
-    { "name": "Compressor_Start", "type": "bool", "access": "write" },
-    { "name": "Refrigerant_Level_PV", "type": "analog", "unit": "%", "access": "read" },
-    { "name": "BMS_Comm_Health", "type": "bool", "access": "read" },
-    { "name": "VFD_Comm_Health", "type": "bool", "access": "read" }
+    { "name": "Compressor_RunStatus", "type": "bool", "access": "read", "description": "Compressor running",
+      "source": { "protocol": "modbus", "device": "Compressor_VFD", "address": "coil:0" } },
+    { "name": "Chilled_Water_Supply_Temp", "type": "analog", "unit": "degC", "access": "read", "description": "Chilled water leaving the chiller",
+      "range": { "low": 0, "high": 20 },
+      "source": { "protocol": "opcua", "device": "BMS_Gateway", "address": "ns=2;s=Chiller1.Chilled_Water_Supply_Temp" } },
+    { "name": "Chilled_Water_Return_Temp", "type": "analog", "unit": "degC", "access": "read", "description": "Chilled water returning from the plant",
+      "range": { "low": 0, "high": 25 },
+      "source": { "protocol": "opcua", "device": "BMS_Gateway", "address": "ns=2;s=Chiller1.Chilled_Water_Return_Temp" } },
+    { "name": "Condenser_Pressure", "type": "analog", "unit": "bar", "access": "read", "description": "Refrigerant condensing pressure",
+      "range": { "low": 0, "high": 16 },
+      "source": { "protocol": "opcua", "device": "BMS_Gateway", "address": "ns=2;s=Chiller1.Condenser_Pressure" } },
+    { "name": "Evaporator_Pressure", "type": "analog", "unit": "bar", "access": "read", "description": "Refrigerant evaporating pressure",
+      "range": { "low": 0, "high": 8 },
+      "source": { "protocol": "opcua", "device": "BMS_Gateway", "address": "ns=2;s=Chiller1.Evaporator_Pressure" } },
+    { "name": "Compressor_Start", "type": "bool", "access": "write", "description": "Compressor start command" },
+    { "name": "Refrigerant_Level_PV", "type": "analog", "unit": "%", "access": "read", "description": "Refrigerant receiver level",
+      "range": { "low": 0, "high": 100 },
+      "source": { "protocol": "opcua", "device": "BMS_Gateway", "address": "ns=2;s=Chiller1.Refrigerant_Level_PV" } },
+    { "name": "BMS_Comm_Health", "type": "bool", "access": "read", "description": "BMS gateway link healthy",
+      "source": { "protocol": "connection", "address": "BMS_Gateway" } },
+    { "name": "VFD_Comm_Health", "type": "bool", "access": "read", "description": "Compressor VFD link healthy",
+      "source": { "protocol": "connection", "address": "Compressor_VFD" } }
   ],
   "io": {
     "digital_in": ["Low_Refrigerant_Switch", "Flow_Switch"],
@@ -20,12 +34,18 @@
     "analog_out": ["Compressor_Speed_Reference"]
   },
   "alarms": [
-    { "id": "ALM_HP01", "desc": "High Condenser Pressure", "priority": "Critical", "tag": "Condenser_Pressure" },
-    { "id": "ALM_LR01", "desc": "Low Refrigerant Level", "priority": "High", "tag": "Refrigerant_Level_PV" },
-    { "id": "ALM_CT01", "desc": "Compressor Trip", "priority": "High", "tag": "Compressor_RunStatus" }
+    { "id": "ALM_HP01", "desc": "High Condenser Pressure", "priority": "Critical", "tag": "Condenser_Pressure",
+      "condition": { "op": ">", "value": 11 },
+      "related_tags": ["Evaporator_Pressure", "Compressor_RunStatus", "Chilled_Water_Return_Temp"] },
+    { "id": "ALM_LR01", "desc": "Low Refrigerant Level", "priority": "High", "tag": "Refrigerant_Level_PV",
+      "condition": { "op": "<", "value": 60 },
+      "related_tags": ["Evaporator_Pressure", "Chilled_Water_Supply_Temp"] },
+    { "id": "ALM_CT01", "desc": "Compressor Trip", "priority": "High", "tag": "Compressor_RunStatus",
+      "condition": { "op": "==", "value": false },
+      "related_tags": ["Condenser_Pressure", "Refrigerant_Level_PV", "VFD_Comm_Health"] }
   ],
   "comms": [
-    { "device": "BMS_Gateway", "protocol": "OPC UA", "endpoint": "10.10.2.10", "health_tag": "BMS_Comm_Health" },
-    { "device": "Compressor_VFD", "protocol": "Modbus TCP", "endpoint": "10.10.2.20", "health_tag": "VFD_Comm_Health" }
+    { "device": "BMS_Gateway", "protocol": "OPC UA", "endpoint": "opc.tcp://127.0.0.1:4840/screenforge", "health_tag": "BMS_Comm_Health" },
+    { "device": "Compressor_VFD", "protocol": "Modbus TCP", "endpoint": "modbus-tcp://127.0.0.1:5021/1", "health_tag": "VFD_Comm_Health" }
   ]
 }

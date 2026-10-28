@@ -19,49 +19,72 @@ asset.
 
 import re
 
-# (asset_id, keywords). Every keyword is matched case-insensitively as a
-# plain substring of the prompt. Keywords are drawn from what an operator
-# would actually type for that machine -- its name, its major equipment, and
-# the tag/comms vocabulary unique to it. Words shared by both machines
-# ("motor" on its own, "vfd", "temperature", "pressure") are deliberately
-# absent: they would make every prompt ambiguous.
-ASSET_KEYWORDS: list[tuple[str, tuple[str, ...]]] = [
-    (
-        "line1.conveyorA",
-        ("conveyor", "belt", "motor 1", "motor1", "motor_1", "line 1", "line1",
-         "plc1", "vfd1"),
-    ),
-    (
-        "plant.utilities.chiller1",
-        ("chiller", "compressor", "refrigerant", "condenser", "evaporator",
-         "chilled water", "chilled_water", "bms"),
-    ),
-]
+import context_store
+
+# Words that appear in tag names but say nothing about WHICH machine.
+_ASSET_STOPWORDS = {
+    "pv", "sp", "status", "runstatus", "health", "comm", "temp", "temperature",
+    "pressure", "level", "sensor", "start", "stop", "value", "high", "low", "the",
+}
+
+
+def _words(text: str) -> set[str]:
+    return {w for w in re.split(r"[^a-z0-9]+", text.lower()) if len(w) >= 3}
+
+
+def asset_keywords() -> dict[str, set[str]]:
+    """
+    Keywords per asset, derived from the machine contexts themselves: aliases,
+    the asset's own name, its tag-name words and its comms device names.
+
+    Nothing here is hand-maintained per machine. A word that turns up on more
+    than one machine ("supply" on both the chiller and an air handler) says
+    nothing about which one the operator means, so it is dropped. A machine
+    imported over OPC UA a minute ago is recognised by name straight away.
+    """
+    per_asset: dict[str, set[str]] = {}
+    for ctx in context_store.all_contexts():
+        words = {a.lower().strip() for a in ctx.get("aliases", []) if a.strip()}
+        words.add(ctx["asset_hierarchy"][-1].lower())
+        for tag in ctx["tags"]:
+            words |= _words(tag["name"].replace("_", " "))
+        for comm in ctx["comms"]:
+            words.add(comm["device"].lower())
+            words |= _words(comm["device"].replace("_", " "))
+        per_asset[ctx["asset_id"]] = {w for w in words if w not in _ASSET_STOPWORDS}
+
+    seen: dict[str, int] = {}
+    for words in per_asset.values():
+        for w in words:
+            seen[w] = seen.get(w, 0) + 1
+    return {asset: {w for w in words if seen[w] == 1} for asset, words in per_asset.items()}
+
+
+def _mentions(text: str, keyword: str) -> bool:
+    # Whole words only, phrases included: "conveyor a" must not match inside
+    # "conveyor and the chiller".
+    return re.search(rf"(?<![a-z0-9]){re.escape(keyword)}(?![a-z0-9])", text) is not None
 
 
 def resolve_asset_id(prompt: str) -> str | None:
     """
     Best-effort asset_id for a prompt that didn't name one.
 
-    Returns the asset_id whose keywords appear most often in the prompt, or
-    None when nothing matches or two machines tie -- callers must treat None
-    as "ask the operator", never as a default.
+    Returns the asset whose keywords appear most often in the prompt, or None
+    when nothing matches or two machines tie -- callers must treat None as
+    "ask the operator", never as a default.
     """
     text = (prompt or "").lower()
-
-    scores = [
-        (asset_id, sum(1 for keyword in keywords if keyword in text))
-        for asset_id, keywords in ASSET_KEYWORDS
-    ]
-    ranked = sorted(scores, key=lambda pair: pair[1], reverse=True)
-
-    best_asset, best_score = ranked[0]
-    if best_score == 0:
+    scores = sorted(
+        ((asset, sum(1 for k in keywords if _mentions(text, k))) for asset, keywords in asset_keywords().items()),
+        key=lambda pair: pair[1],
+        reverse=True,
+    )
+    if not scores or scores[0][1] == 0:
         return None
-    if len(ranked) > 1 and ranked[1][1] == best_score:
-        # Two machines matched equally well -- genuinely ambiguous.
-        return None
-    return best_asset
+    if len(scores) > 1 and scores[1][1] == scores[0][1]:
+        return None  # two machines matched equally well -- genuinely ambiguous
+    return scores[0][0]
 
 
 # --------------------------------------------------------------------------

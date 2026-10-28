@@ -10,7 +10,8 @@ How it behaves:
     or stopping).
   - analog tags: drift slowly within a "normal" band around a baseline, and
     every so often take a bigger excursion outside that band -- which is
-    what should trip an alarm on the HMI side.
+    what should trip an alarm. Alarm thresholds are NOT here: they live in
+    the machine context (alarms[].condition) and are applied by alarms.py.
 
 State is kept in memory, per asset_id, so values drift smoothly across
 repeated calls instead of jumping around randomly every time someone asks.
@@ -19,6 +20,7 @@ repeated calls instead of jumping around randomly every time someone asks.
 import random
 import time
 
+import alarms
 import context_store
 
 # Reasonable normal-operating baselines per tag name, used only by the
@@ -85,22 +87,25 @@ def _clamp_to_unit(value: float, unit: str | None) -> float:
 # should start False (nothing commanded yet). Anything else defaults to False.
 _BOOL_STARTS_TRUE = {"Motor_1_RunStatus", "Compressor_RunStatus"}
 
-# Which alarm ids are currently "active" is computed from a simple threshold
-# per alarm, evaluated against the tag named in that alarm's own definition
-# (alarm["tag"] in the machine context). This lives here, not in contracts/,
-# because it's purely a simulator concern -- a real PLC would already know
-# whether its own alarm is active; we have to fake that decision ourselves.
-_ALARM_CONDITIONS = {
-    "ALM_HT01": lambda v: v > 60,      # High Temperature
-    "ALM_LP01": lambda v: v < 2.0,     # Low Pressure
-    "ALM_MT01": lambda v: v is False,  # Motor Trip (tripped = not running)
-    "ALM_HP01": lambda v: v > 11,      # High Condenser Pressure
-    "ALM_LR01": lambda v: v < 60,      # Low Refrigerant Level
-    "ALM_CT01": lambda v: v is False,  # Compressor Trip (tripped = not running)
-}
-
 # In-memory "current value" state, per asset_id -> tag name -> value.
 _STATE: dict[str, dict[str, float | bool]] = {}
+
+# Faults injected for a demo: asset_id -> tag -> (forced value, until epoch).
+# A fault holds a tag at a value for a while, as a real excursion would, so
+# an alarm stays up long enough for an operator to work it.
+_FAULTS: dict[str, dict[str, tuple[float | bool, float]]] = {}
+
+
+def inject_fault(asset_id: str, tag_name: str, value: float | bool, seconds: float = 20.0) -> None:
+    """Hold one simulated tag at `value` for `seconds`, then let it recover."""
+    _FAULTS.setdefault(asset_id, {})[tag_name] = (value, time.time() + seconds)
+
+
+def clear_faults(asset_id: str | None = None) -> None:
+    if asset_id is None:
+        _FAULTS.clear()
+    else:
+        _FAULTS.pop(asset_id, None)
 
 
 def _starting_value(tag: dict) -> float | bool:
@@ -134,26 +139,6 @@ def _sync_state_to_context(asset_id: str, ctx: dict) -> dict:
     return state
 
 
-def _evaluate_alarms(ctx: dict, state: dict) -> dict[str, bool]:
-    """
-    Return { alarm_id: True/False } for every alarm defined on this asset,
-    by checking the current value of that alarm's bound tag against a
-    threshold condition. An alarm with no known condition defaults to
-    inactive rather than crashing -- a missing condition should never take
-    down the /tags endpoint.
-    """
-    alarm_states = {}
-    for alarm in ctx["alarms"]:
-        tag_name = alarm["tag"]
-        current_value = state.get(tag_name)
-        condition = _ALARM_CONDITIONS.get(alarm["id"])
-        if condition is None or current_value is None:
-            alarm_states[alarm["id"]] = False
-        else:
-            alarm_states[alarm["id"]] = bool(condition(current_value))
-    return alarm_states
-
-
 def _step_bool(current: bool, tag_name: str) -> bool:
     # Health tags: rarely flip (a comms dropout should be a rare, noticeable
     # event, not constant flapping).
@@ -181,26 +166,40 @@ def _step_analog(current: float, tag_name: str, unit: str | None = None) -> floa
     return round(_clamp_to_unit(current, unit), 2)
 
 
-def get_live_values(asset_id: str) -> dict:
-    """
-    Return the current simulated value for every tag belonging to asset_id,
-    advancing the simulation by one step. Initializes state on first call
-    for a given asset.
-    """
+def step(asset_id: str) -> dict[str, float | bool]:
+    """Advance the simulation of one asset by one tick and return its tag values."""
     ctx = context_store.get_context(asset_id)
     state = _sync_state_to_context(asset_id, ctx)
+    faults = _FAULTS.get(asset_id, {})
+    now = time.time()
 
     for tag in ctx["tags"]:
         name = tag["name"]
+        fault = faults.get(name)
+        if fault and fault[1] > now:
+            state[name] = fault[0]
+            continue
+        if fault:
+            del faults[name]
         if tag["type"] == "bool":
             state[name] = _step_bool(state[name], name)
         else:
             state[name] = _step_analog(state[name], name, tag.get("unit"))
+    return dict(state)
 
+
+def get_live_values(asset_id: str) -> dict:
+    """
+    One simulation tick for asset_id, in the GET /tags shape. Alarm states are
+    decided by the conditions in the machine context (alarms.py), the same
+    rule the live OPC UA / Modbus path uses.
+    """
+    ctx = context_store.get_context(asset_id)
+    values = step(asset_id)
     return {
         "asset_id": asset_id,
         "context_version": ctx["context_version"],
         "timestamp": time.time(),
-        "tags": dict(state),
-        "alarms": _evaluate_alarms(ctx, state),
+        "tags": values,
+        "alarms": alarms.evaluate_conditions(ctx, values),
     }

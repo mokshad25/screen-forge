@@ -18,7 +18,8 @@ API_DIR = Path(__file__).resolve().parent.parent
 if str(API_DIR) not in sys.path:
     sys.path.insert(0, str(API_DIR))
 
-import context_store  # noqa: E402
+import context_store
+from helpers import without_tag  # noqa: E402
 import reconciler  # noqa: E402
 import tag_simulator  # noqa: E402
 
@@ -137,11 +138,7 @@ def test_tags_keeps_serving_across_a_bump():
 
 def test_a_removed_tag_disappears_from_tags():
     context = context_store.get_context(CHILLER)
-    trimmed = {
-        **context,
-        "context_version": "chiller1@v9",
-        "tags": [t for t in context["tags"] if t["name"] != "Condenser_Pressure"],
-    }
+    trimmed = without_tag(context, "Condenser_Pressure", "chiller1@v9")
     tag_simulator.get_live_values(CHILLER)
     context_store.reload_context(CHILLER, trimmed)
 

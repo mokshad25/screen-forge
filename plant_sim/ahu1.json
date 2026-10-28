@@ -1,0 +1,20 @@
+{
+  "_comment": "Air handling unit 1. Exposed only by the plant's OPC UA server, never shipped to ScreenForge as a fixture: ScreenForge learns about it by browsing the server (POST /context/import).",
+  "asset_id": "plant.utilities.ahu1",
+  "folder": "AHU1",
+  "asset_hierarchy": ["Plant", "Utilities", "AHU 1"],
+  "aliases": ["ahu", "air handler", "air handling unit", "hvac", "fan"],
+  "device": "AHU_Controller",
+  "tags": [
+    { "name": "Supply_Fan_Status", "type": "bool", "description": "Supply fan running" },
+    { "name": "Supply_Air_Temp", "type": "analog", "unit": "degC", "low": 0, "high": 40, "description": "Supply air leaving the coil" },
+    { "name": "Return_Air_Temp", "type": "analog", "unit": "degC", "low": 0, "high": 40, "description": "Return air from the zone" },
+    { "name": "Filter_DP", "type": "analog", "unit": "Pa", "low": 0, "high": 500, "description": "Pressure drop across the bag filter" },
+    { "name": "Duct_Static_Pressure", "type": "analog", "unit": "Pa", "low": 0, "high": 1500, "description": "Supply duct static pressure" }
+  ],
+  "alarms": [
+    { "id": "ALM_FD01", "desc": "Filter Dirty", "priority": "Warning", "tag": "Filter_DP", "op": ">", "value": 250, "related": ["Duct_Static_Pressure", "Supply_Fan_Status"] },
+    { "id": "ALM_SA01", "desc": "High Supply Air Temperature", "priority": "High", "tag": "Supply_Air_Temp", "op": ">", "value": 18, "related": ["Return_Air_Temp", "Supply_Fan_Status"] },
+    { "id": "ALM_FF01", "desc": "Supply Fan Failure", "priority": "Critical", "tag": "Supply_Fan_Status", "op": "==", "value": false, "related": ["Duct_Static_Pressure", "Supply_Air_Temp"] }
+  ]
+}

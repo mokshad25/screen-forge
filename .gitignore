@@ -7,3 +7,11 @@ venv/
 
 # Local secrets
 .env
+
+# Runtime data
+api/data/
+*.db
+
+# Node
+node_modules/
+.next/
