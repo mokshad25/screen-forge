@@ -27,25 +27,25 @@ class Profile:
 
 PROFILES: dict[str, Profile] = {
     # Conveyor A (PLC1, Modbus)
-    "Conveyor_Speed_SP": Profile(1.2, 0.05, 0.02, 0.4, 0, 2.5),
-    "Temperature_PV": Profile(45.0, 1.0, 0.03, 20.0, 0, 100),
-    "Pressure_Sensor": Profile(3.2, 0.08, 0.03, 2.0, 0, 6),
+    "Conveyor_Speed_SP": Profile(1.2, 0.05, 0.002, 0.4, 0, 2.5),
+    "Temperature_PV": Profile(45.0, 1.0, 0.002, 10.0, 0, 100),
+    "Pressure_Sensor": Profile(3.2, 0.08, 0.002, 0.8, 0, 6),
     # Chiller 1 (BMS over OPC UA, VFD over Modbus)
-    "Chilled_Water_Supply_Temp": Profile(7.0, 0.2, 0.02, 4.0, 0, 20),
-    "Chilled_Water_Return_Temp": Profile(12.0, 0.2, 0.02, 4.0, 0, 25),
-    "Condenser_Pressure": Profile(9.0, 0.15, 0.03, 3.0, 0, 16),
-    "Evaporator_Pressure": Profile(4.0, 0.1, 0.02, 1.2, 0, 8),
-    "Refrigerant_Level_PV": Profile(85.0, 1.5, 0.01, -35.0, 0, 100),
-    "Vibration_PV": Profile(2.4, 0.2, 0.03, 4.0, 0, 20),
+    "Chilled_Water_Supply_Temp": Profile(7.0, 0.2, 0.002, 2.5, 0, 20),
+    "Chilled_Water_Return_Temp": Profile(12.0, 0.2, 0.002, 2.5, 0, 25),
+    "Condenser_Pressure": Profile(9.0, 0.15, 0.002, 1.5, 0, 16),
+    "Evaporator_Pressure": Profile(4.0, 0.1, 0.002, 0.8, 0, 8),
+    "Refrigerant_Level_PV": Profile(85.0, 1.5, 0.002, -35.0, 0, 100),
+    "Vibration_PV": Profile(2.4, 0.2, 0.002, 2.5, 0, 20),
     # AHU 1 (OPC UA only; not known to ScreenForge until imported)
-    "Supply_Air_Temp": Profile(14.0, 0.3, 0.02, 6.0, 0, 40),
-    "Return_Air_Temp": Profile(24.0, 0.3, 0.01, 4.0, 0, 40),
-    "Filter_DP": Profile(140.0, 6.0, 0.02, 160.0, 0, 500),
-    "Duct_Static_Pressure": Profile(450.0, 15.0, 0.02, 300.0, 0, 1500),
+    "Supply_Air_Temp": Profile(14.0, 0.3, 0.002, 3.0, 0, 40),
+    "Return_Air_Temp": Profile(24.0, 0.3, 0.002, 4.0, 0, 40),
+    "Filter_DP": Profile(140.0, 6.0, 0.002, 60.0, 0, 500),
+    "Duct_Static_Pressure": Profile(450.0, 15.0, 0.002, 200.0, 0, 1500),
 }
 
 BOOLS_START_TRUE = {"Motor_1_RunStatus", "Compressor_RunStatus", "VFD1_Health", "Supply_Fan_Status"}
-BOOL_FLIP_CHANCE = 0.004
+BOOL_FLIP_CHANCE = 0.0008
 
 
 class PlantModel:

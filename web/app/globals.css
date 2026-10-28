@@ -1,73 +1,122 @@
 @import "tailwindcss";
+@import "@fontsource/barlow/400.css";
+@import "@fontsource/barlow/500.css";
+@import "@fontsource/barlow/600.css";
+@import "@fontsource/barlow/700.css";
+@import "@fontsource/barlow-condensed/500.css";
+@import "@fontsource/barlow-condensed/600.css";
+@import "@fontsource/barlow-condensed/700.css";
 
+/*
+  ISA-101 high-performance HMI palette.
+  Grey is normal. Colour means abnormal: alarm priorities, and violet for bad
+  data quality. The one interface accent (steel blue) is only ever used for
+  controls the operator clicks, never for process state.
+*/
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  --bg: #0c0f13;
-  --surface: #151a21;
-  --cell: #1b2129;
-  --cell-border: #2b333d;
-  --bezel: #05070a;
-  --text: #eef2f6;
-  --text-muted: #9aa6b3;
-  --text-faint: #66727f;
-  --track: #2f3843;
-  /* Normal-state value marks (gauge arc, trend line, status dot). Never a hue. */
-  --neutral-fill: #d6dde5;
+  --canvas: #dcdedf;   /* the HMI screen */
+  --well: #eceded;     /* a widget's face */
+  --chrome: #c7cacc;   /* app frame around the screen */
+  --chrome-2: #b9bdc0;
+  --rule: #aeb3b6;
+  --bezel: #3a4044;    /* the panel's physical frame */
 
-  /* Colour on a rendered screen is reserved for alarm severity
-     (machine context alarms[].priority). Nothing else gets a hue. */
-  --sev-1: #ff453a; /* Critical */
-  --sev-2: #ff9f0a; /* High */
-  --sev-3: #ffd60a; /* Warning */
+  --ink: #1e2225;
+  --ink-2: #596166;
+  --ink-faint: #848b90;
+  --process: #6a7277;  /* normal-state value marks */
+  --band: #c9cdd0;     /* normal operating band on indicators */
+
+  --alarm-1: #c8102e;  /* Critical */
+  --alarm-2: #e87722;  /* High */
+  --alarm-3: #f2c200;  /* Warning */
+  --bad-q: #6f4ca8;    /* bad data quality */
+
+  --control: #2d5b88;
+  --control-ink: #ffffff;
 }
 
 @theme inline {
-  --color-bg: var(--bg);
-  --color-surface: var(--surface);
-  --color-cell: var(--cell);
-  --color-cell-border: var(--cell-border);
+  --color-canvas: var(--canvas);
+  --color-well: var(--well);
+  --color-chrome: var(--chrome);
+  --color-chrome-2: var(--chrome-2);
+  --color-rule: var(--rule);
   --color-bezel: var(--bezel);
-  --color-text: var(--text);
-  --color-muted: var(--text-muted);
-  --color-faint: var(--text-faint);
-  --color-track: var(--track);
-  --color-neutral-fill: var(--neutral-fill);
-  --color-sev-1: var(--sev-1);
-  --color-sev-2: var(--sev-2);
-  --color-sev-3: var(--sev-3);
-  --color-sev-4: var(--sev-4);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-faint: var(--ink-faint);
+  --color-process: var(--process);
+  --color-band: var(--band);
+  --color-alarm-1: var(--alarm-1);
+  --color-alarm-2: var(--alarm-2);
+  --color-alarm-3: var(--alarm-3);
+  --color-bad-q: var(--bad-q);
+  --color-control: var(--control);
+  --font-sans: "Barlow", system-ui, sans-serif;
+  --font-cond: "Barlow Condensed", "Barlow", system-ui, sans-serif;
 }
 
+html,
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
-}
-
-.numeral {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  background: var(--chrome);
+  color: var(--ink);
+  font-family: "Barlow", system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
 }
 
-@keyframes sf-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
+.cond {
+  font-family: "Barlow Condensed", "Barlow", system-ui, sans-serif;
 }
 
-.sf-pulse {
-  animation: sf-pulse 1.2s ease-in-out infinite;
+/* Bad quality: the last value, held and visibly marked as not current. */
+.bad-q {
+  background-image: repeating-linear-gradient(-45deg, transparent 0 6px, rgb(111 76 168 / 0.14) 6px 9px);
+}
+
+:focus-visible {
+  outline: 2px solid var(--control);
+  outline-offset: 2px;
+}
+
+@keyframes sf-blink {
+  0%,
+  55% {
+    opacity: 1;
+  }
+  56%,
+  100% {
+    opacity: 0.25;
+  }
+}
+.sf-blink {
+  animation: sf-blink 1s steps(1, end) infinite;
+}
+
+@keyframes sf-arrive {
+  from {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.sf-arrive {
+  animation: sf-arrive 180ms ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sf-pulse {
+  .sf-blink,
+  .sf-arrive {
     animation: none;
   }
+}
+
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
 }

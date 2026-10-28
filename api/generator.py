@@ -322,10 +322,16 @@ def read_only_error(asset_id: str | None, prompt: str) -> dict:
     sensibly without one.
     """
     readable: list[str] = []
+    machine = asset_id
     if asset_id:
         try:
             context = context_store.get_context(asset_id)
-            readable = [t["name"] for t in context["tags"] if t.get("access") != "write"]
+            machine = context["asset_hierarchy"][-1]
+            readable = [
+                t["name"].replace("_", " ").lower()
+                for t in context["tags"]
+                if t.get("access") != "write" and t["type"] == "analog"
+            ]
         except context_store.ContextNotFoundError:
             readable = []
 
@@ -333,24 +339,15 @@ def read_only_error(asset_id: str | None, prompt: str) -> dict:
     if len(quoted) > 70:
         quoted = quoted[:67] + "..."
 
-    if asset_id:
-        scope = (
-            f"Every generated screen is read-only by design: it can display "
-            f"{asset_id}, but it cannot start, stop, or change anything on it."
-        )
-    else:
-        scope = (
-            "Every generated screen is read-only by design: it can display a "
-            "machine, but it cannot start, stop, or change anything on it."
-        )
-
+    who = machine or "the machine"
     examples = ", ".join(readable[:3])
-    can_show = f" It can show you live values such as {examples}." if examples else ""
+    can_show = f" It can show you {examples} live instead." if examples else ""
 
     return {
         "message": (
-            f"\"{quoted}\" asks to change the machine, and ScreenForge builds "
-            f"monitoring screens only. {scope}{can_show}"
+            f"\"{quoted}\" asks to change the machine. ScreenForge only builds monitoring "
+            f"screens: it can display {who}, but it cannot start, stop or adjust anything on it."
+            f"{can_show}"
         ),
         "stage": "read_only",
         "field": None,

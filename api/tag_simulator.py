@@ -31,29 +31,29 @@ import context_store
 # the distinction exists -- "low refrigerant" is the interesting story, and a
 # tank that spontaneously fills itself isn't one.
 _BASELINES = {
-    "Conveyor_Speed_SP": {"baseline": 1.2, "normal_swing": 0.05, "excursion_chance": 0.03, "excursion_swing": 0.4},
-    "Temperature_PV": {"baseline": 45.0, "normal_swing": 1.5, "excursion_chance": 0.05, "excursion_swing": 20.0},
-    "Pressure_Sensor": {"baseline": 3.2, "normal_swing": 0.1, "excursion_chance": 0.05, "excursion_swing": 2.0},
-    "Chilled_Water_Supply_Temp": {"baseline": 7.0, "normal_swing": 0.3, "excursion_chance": 0.03, "excursion_swing": 5.0},
-    "Chilled_Water_Return_Temp": {"baseline": 12.0, "normal_swing": 0.3, "excursion_chance": 0.03, "excursion_swing": 5.0},
-    "Condenser_Pressure": {"baseline": 9.0, "normal_swing": 0.2, "excursion_chance": 0.05, "excursion_swing": 3.0},
-    "Evaporator_Pressure": {"baseline": 4.0, "normal_swing": 0.15, "excursion_chance": 0.03, "excursion_swing": 1.5},
+    "Conveyor_Speed_SP": {"baseline": 1.2, "normal_swing": 0.05, "excursion_chance": 0.004, "excursion_swing": 0.3},
+    "Temperature_PV": {"baseline": 45.0, "normal_swing": 1.5, "excursion_chance": 0.004, "excursion_swing": 10.0},
+    "Pressure_Sensor": {"baseline": 3.2, "normal_swing": 0.1, "excursion_chance": 0.004, "excursion_swing": 0.8},
+    "Chilled_Water_Supply_Temp": {"baseline": 7.0, "normal_swing": 0.3, "excursion_chance": 0.004, "excursion_swing": 2.5},
+    "Chilled_Water_Return_Temp": {"baseline": 12.0, "normal_swing": 0.3, "excursion_chance": 0.004, "excursion_swing": 2.5},
+    "Condenser_Pressure": {"baseline": 9.0, "normal_swing": 0.2, "excursion_chance": 0.004, "excursion_swing": 1.5},
+    "Evaporator_Pressure": {"baseline": 4.0, "normal_swing": 0.15, "excursion_chance": 0.004, "excursion_swing": 0.8},
     # Lower excursion_chance than the others on purpose: a fall of 40 takes
     # roughly 8 steps to recover from, so at 0.05 the level would settle near
     # 45 and ALM_LR01 would simply be on for good. At 0.015 it sits near
     # baseline and dips below the alarm threshold now and then, which is the
     # behaviour worth showing.
-    "Refrigerant_Level_PV": {"baseline": 85.0, "normal_swing": 2.0, "excursion_chance": 0.015, "excursion_swing": -40.0},
+    "Refrigerant_Level_PV": {"baseline": 85.0, "normal_swing": 2.0, "excursion_chance": 0.003, "excursion_swing": -40.0},
     # Added to the chiller at runtime by the machine-change demo. Profiled
     # here so it reads like a real sensor the moment it appears, rather than
     # falling back to the flat default.
-    "Vibration_PV": {"baseline": 2.4, "normal_swing": 0.25, "excursion_chance": 0.04, "excursion_swing": 4.0},
+    "Vibration_PV": {"baseline": 2.4, "normal_swing": 0.25, "excursion_chance": 0.004, "excursion_swing": 2.5},
 }
 
 # Fallback for any analog tag we didn't hand-tune above (e.g. health tags
 # treated as analog by mistake, or a tag added later) -- keeps the demo from
 # crashing if someone adds a tag without updating this file.
-_DEFAULT_ANALOG = {"baseline": 50.0, "normal_swing": 2.0, "excursion_chance": 0.02, "excursion_swing": 10.0}
+_DEFAULT_ANALOG = {"baseline": 50.0, "normal_swing": 2.0, "excursion_chance": 0.004, "excursion_swing": 10.0}
 
 # Physical limits, keyed by the tag's own unit rather than its name, so a tag
 # that appears at runtime (the Phase 4 context bump adds one) is bounded
@@ -140,12 +140,17 @@ def _sync_state_to_context(asset_id: str, ctx: dict) -> dict:
 
 
 def _step_bool(current: bool, tag_name: str) -> bool:
-    # Health tags: rarely flip (a comms dropout should be a rare, noticeable
-    # event, not constant flapping).
-    flip_chance = 0.01 if "Health" in tag_name else 0.03
-    if random.random() < flip_chance:
-        return not current
-    return current
+    # Things that are normally on (a running motor, a healthy link) drop out
+    # rarely and come back within a few seconds: a trip that never cleared
+    # would leave every demo starting in alarm. Anything else flips rarely.
+    normally_on = "Health" in tag_name or tag_name in _BOOL_STARTS_TRUE
+    if normally_on:
+        if current and random.random() < 0.0015:
+            return False
+        if not current and random.random() < 0.25:
+            return True
+        return current
+    return (not current) if random.random() < 0.002 else current
 
 
 def _step_analog(current: float, tag_name: str, unit: str | None = None) -> float:
