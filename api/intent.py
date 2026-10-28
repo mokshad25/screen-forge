@@ -232,7 +232,16 @@ def _acts_on_the_interface(text: str, match: re.Match, verb: str) -> bool:
         # "open alarms" displays them; "reset the alarm" changes the machine.
         objects -= _ALARM_OBJECTS
 
-    span = text[match.start():match.end() + _OBJECT_WINDOW]
+    # Look to the end of the clause, not a fixed number of characters: in "put
+    # condenser and evaporator pressure on one chart" the object that makes it
+    # a viewing request is 45 characters after the verb.
+    rest = text[match.end():]
+    clause_end = re.search(
+        rf"[.;!?]|,\s*(?:then|and then|now)\b|\s(?:and|then)\s+(?:{_CONTROL_VERBS}|show|add|make|put|display|give)\b",
+        rest,
+    )
+    tail = rest[: clause_end.start()] if clause_end else rest
+    span = text[match.start():match.end()] + tail[: max(_OBJECT_WINDOW, 120)]
     return any(word in objects for word in re.findall(r"[a-z]+", span))
 
 

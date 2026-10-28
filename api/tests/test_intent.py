@@ -205,3 +205,30 @@ def test_monitoring_requests_are_not_refused(prompt):
     assert intent.control_request(prompt) is None, (
         f"{prompt!r} is a monitoring request and must NOT be refused"
     )
+
+
+# Found by the v2 reliability suite: a screen word far from the verb.
+VIEWING_WITH_A_DISTANT_SCREEN_WORD = [
+    "put condenser and evaporator pressure on one chart",
+    "show condenser and evaporator pressure and put them on one chart",
+    "set the panel to the large layout",
+    "add the chiller alarms at the top",
+    "drop the comms tile",
+]
+# ...and the wider look-ahead must not let a second clause excuse the first.
+CONTROL_FOLLOWED_BY_A_VIEWING_CLAUSE = [
+    "start the motor and put the speed on a gauge",
+    "open the chiller overview and then start the compressor",
+    "put the motor in manual",
+    "set the speed to 1.5",
+]
+
+
+@pytest.mark.parametrize("prompt", VIEWING_WITH_A_DISTANT_SCREEN_WORD)
+def test_viewing_requests_with_a_distant_screen_word_pass(prompt):
+    assert intent.control_request(prompt) is None
+
+
+@pytest.mark.parametrize("prompt", CONTROL_FOLLOWED_BY_A_VIEWING_CLAUSE)
+def test_a_viewing_clause_does_not_excuse_a_control_clause(prompt):
+    assert intent.control_request(prompt) is not None

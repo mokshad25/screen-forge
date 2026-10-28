@@ -75,6 +75,10 @@ XAI_MODEL_NAME = "grok-4.1-fast-non-reasoning"
 # ~426 tokens to ~34 per call with no loss of reliability (still 20/20), and
 # fewer tokens is what buys headroom against the tokens-per-minute limit.
 PROVIDERS: dict[str, tuple[str, str | None, str, str | None]] = {
+    # An OpenAI-compatible server on the plant network (Ollama, vLLM,
+    # llama.cpp): nothing about the plant leaves the site. Listed first so
+    # setting it is an explicit choice that wins over any cloud key.
+    "local": ("LOCAL_LLM_BASE_URL", None, "qwen2.5:14b-instruct", None),
     "openai": ("OPENAI_API_KEY", None, MODEL_NAME, None),
     "groq": ("GROQ_API_KEY", GROQ_BASE_URL, GROQ_MODEL_NAME, "low"),
     "xai": ("XAI_API_KEY", XAI_BASE_URL, XAI_MODEL_NAME, None),
@@ -281,7 +285,11 @@ def _call_llm(system_prompt: str, user_prompt: str) -> dict:
     provider, model = llm_provider()
     env_var, base_url, _default_model, _default_effort = PROVIDERS[provider]
 
-    client = _client(env_var, base_url, os.environ[env_var])
+    if provider == "local":
+        # The variable holds the server's URL; local servers ignore the key.
+        client = _client(env_var, os.environ[env_var], os.environ.get("LOCAL_LLM_API_KEY", "local"))
+    else:
+        client = _client(env_var, base_url, os.environ[env_var])
 
     extra = {}
     effort = reasoning_effort()

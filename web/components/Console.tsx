@@ -377,6 +377,12 @@ function ConsoleInner() {
                 </button>
               </div>
               {screen && (
+                <button type="button" onClick={() => { setScreen(null); setMode("new"); setStages({}); setError(null); }}
+                  className="border border-ink-2 px-2.5 py-1 text-sm font-semibold hover:bg-chrome-2">
+                  Close screen
+                </button>
+              )}
+              {screen && (
                 <button type="button" onClick={save} disabled={screen.saved}
                   className="border border-ink-2 px-2.5 py-1 text-sm font-semibold hover:bg-chrome-2 disabled:opacity-50">
                   {screen.saved ? "Saved" : "Save screen"}

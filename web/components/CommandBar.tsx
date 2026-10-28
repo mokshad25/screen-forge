@@ -58,8 +58,8 @@ export function CommandBar({ mode, canEdit, onMode, busy, stages, llmReady, sugg
   };
   const placeholder =
     mode === "edit"
-      ? "Change this screen: make the trend bigger, add evaporator pressure, drop the comms tiles"
-      : "What do you need to watch? e.g. condenser pressure keeps spiking, give me what I need to watch it";
+      ? "Change this screen, e.g. make the trend bigger and add evaporator pressure"
+      : "What do you need to watch? e.g. condenser pressure keeps spiking";
   const shown = Object.keys(stages).length > 0;
 
   return (

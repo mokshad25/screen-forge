@@ -1,0 +1,35 @@
+# The whole demo: a simulated plant speaking OPC UA and Modbus TCP, the API
+# reading it live, and the operator console.
+#
+#   docker compose up --build
+#   open http://localhost:3000
+#
+# Put GROQ_API_KEY (or OPENAI_API_KEY) in api/.env to enable screens from requests.
+services:
+  plant:
+    build: { context: ., dockerfile: docker/plant.Dockerfile }
+    ports:
+      - "8090:8090"   # demo control: faults, pulled links
+      - "4840:4840"   # OPC UA, so you can browse it with UaExpert too
+  api:
+    build: { context: ., dockerfile: docker/api.Dockerfile }
+    depends_on: [plant]
+    env_file:
+      - path: api/.env
+        required: false
+    environment:
+      SCREENFORGE_TAG_SOURCE: live
+      SCREENFORGE_PLANT_HOST: plant
+      SCREENFORGE_OPCUA_ALLOW: 127.0.0.1:4840,localhost:4840,plant:4840
+      SCREENFORGE_CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+    volumes:
+      - screenforge-data:/app/api/data
+    ports:
+      - "8000:8000"
+  web:
+    build: { context: ., dockerfile: docker/web.Dockerfile }
+    depends_on: [api]
+    ports:
+      - "3000:3000"
+volumes:
+  screenforge-data:

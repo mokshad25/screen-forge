@@ -29,6 +29,7 @@ from urllib.parse import urlparse
 from asyncua import Client, ua
 
 import context_store
+from acquisition import _host
 
 DEFAULT_ALLOW = "127.0.0.1:4840,localhost:4840,plant:4840"
 TIMEOUT = 4.0
@@ -37,6 +38,12 @@ _NAME = re.compile(r"^[A-Za-z][A-Za-z0-9_]{0,63}$")
 
 class ImportRefused(ValueError):
     """The endpoint or what it serves can't be imported."""
+
+
+def _connect_url(endpoint: str) -> str:
+    """Where to actually connect (inside docker-compose the plant is "plant", not 127.0.0.1)."""
+    parsed = urlparse(endpoint)
+    return endpoint.replace(parsed.hostname or "", _host(parsed.hostname or ""), 1)
 
 
 def check_endpoint(endpoint: str) -> str:
@@ -75,7 +82,7 @@ async def _plant_assets(client: Client) -> list:
 
 async def list_assets(endpoint: str) -> list[dict]:
     check_endpoint(endpoint)
-    async with Client(endpoint, timeout=TIMEOUT) as client:
+    async with Client(_connect_url(endpoint), timeout=TIMEOUT) as client:
         out = []
         for node in await _plant_assets(client):
             props = await _props(node)
@@ -174,7 +181,7 @@ def _next_version(existing: dict) -> str:
 async def import_asset(endpoint: str, asset_id: str) -> dict:
     """Browse one asset and register it. Returns {context, created, changed}."""
     check_endpoint(endpoint)
-    async with Client(endpoint, timeout=TIMEOUT) as client:
+    async with Client(_connect_url(endpoint), timeout=TIMEOUT) as client:
         for node in await _plant_assets(client):
             props = await _props(node)
             if props.get("AssetId") == asset_id:
