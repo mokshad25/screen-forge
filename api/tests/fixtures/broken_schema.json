@@ -1,0 +1,10 @@
+{
+  "screen_id": "broken_schema",
+  "title": "Missing permissions block",
+  "asset_id": "line1.conveyorA",
+  "context_version": "conveyorA@v3",
+  "components": [
+    { "id": "c1", "type": "status_indicator", "bind_tag": "Motor_1_RunStatus",
+      "priority": 1, "size_hint": "compact", "min_panel": "small" }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "screen_id": "broken_nav_tile_unknown_asset",
+  "title": "Conveyor A, bogus nav target",
+  "asset_id": "line1.conveyorA",
+  "context_version": "conveyorA@v3",
+  "components": [
+    { "id": "c1", "type": "nav_tile", "bind_asset": "plant.utilities.boilerZZ",
+      "priority": 1, "size_hint": "compact", "min_panel": "small" }
+  ],
+  "permissions": { "mode": "read_only" }
+}

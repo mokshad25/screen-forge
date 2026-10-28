@@ -1,0 +1,15 @@
+{
+  "screen_id": "golden_comms",
+  "title": "Chiller 1, Connectivity Health",
+  "asset_id": "plant.utilities.chiller1",
+  "context_version": "chiller1@v1",
+  "components": [
+    { "id": "c1", "type": "alarm_banner", "bind_alarms": ["ALM_HP01", "ALM_CT01"],
+      "priority": 1, "size_hint": "wide", "min_panel": "small" },
+    { "id": "c2", "type": "comms_health", "bind_device": "BMS_Gateway",
+      "priority": 2, "size_hint": "medium", "min_panel": "small" },
+    { "id": "c3", "type": "comms_health", "bind_device": "Compressor_VFD",
+      "priority": 3, "size_hint": "medium", "min_panel": "small" }
+  ],
+  "permissions": { "mode": "read_only" }
+}

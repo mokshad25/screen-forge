@@ -1,0 +1,71 @@
+{
+  "screen_id": "gen_a1b2c",
+  "title": "Conveyor A, Full Overview",
+  "asset_id": "line1.conveyorA",
+  "context_version": "conveyorA@v3",
+  "components": [
+    {
+      "id": "c1",
+      "type": "alarm_banner",
+      "bind_alarms": [
+        "ALM_HT01",
+        "ALM_LP01",
+        "ALM_MT01"
+      ],
+      "priority": 1,
+      "size_hint": "wide",
+      "min_panel": "small"
+    },
+    {
+      "id": "c2",
+      "type": "comms_health",
+      "bind_device": "PLC1",
+      "priority": 2,
+      "size_hint": "medium",
+      "min_panel": "small"
+    },
+    {
+      "id": "c3",
+      "type": "comms_health",
+      "bind_device": "VFD1",
+      "priority": 3,
+      "size_hint": "medium",
+      "min_panel": "small"
+    },
+    {
+      "id": "c4",
+      "type": "status_indicator",
+      "bind_tag": "Motor_1_RunStatus",
+      "priority": 4,
+      "size_hint": "compact",
+      "min_panel": "small"
+    },
+    {
+      "id": "c5",
+      "type": "gauge",
+      "bind_tag": "Conveyor_Speed_SP",
+      "priority": 5,
+      "size_hint": "medium",
+      "min_panel": "small"
+    },
+    {
+      "id": "c6",
+      "type": "trend",
+      "bind_tag": "Temperature_PV",
+      "priority": 6,
+      "size_hint": "wide",
+      "min_panel": "medium"
+    },
+    {
+      "id": "c7",
+      "type": "trend",
+      "bind_tag": "Pressure_Sensor",
+      "priority": 7,
+      "size_hint": "wide",
+      "min_panel": "medium"
+    }
+  ],
+  "permissions": {
+    "mode": "read_only"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "screen_id": "golden_status_alarms",
+  "title": "Conveyor A, Status and Alarms",
+  "asset_id": "line1.conveyorA",
+  "context_version": "conveyorA@v3",
+  "components": [
+    { "id": "c1", "type": "alarm_banner", "bind_alarms": ["ALM_HT01", "ALM_MT01"],
+      "priority": 1, "size_hint": "wide", "min_panel": "small" },
+    { "id": "c2", "type": "status_indicator", "bind_tag": "Motor_1_RunStatus",
+      "priority": 2, "size_hint": "compact", "min_panel": "small" },
+    { "id": "c3", "type": "gauge", "bind_tag": "Conveyor_Speed_SP",
+      "priority": 3, "size_hint": "medium", "min_panel": "small" },
+    { "id": "c4", "type": "trend", "bind_tag": "Temperature_PV",
+      "priority": 4, "size_hint": "medium", "min_panel": "medium" }
+  ],
+  "permissions": { "mode": "read_only" }
+}

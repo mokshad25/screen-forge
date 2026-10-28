@@ -1,0 +1,13 @@
+{
+  "screen_id": "golden_trend",
+  "title": "Conveyor A, Temperature Trend",
+  "asset_id": "line1.conveyorA",
+  "context_version": "conveyorA@v3",
+  "components": [
+    { "id": "c1", "type": "trend", "bind_tag": "Temperature_PV",
+      "priority": 1, "size_hint": "wide", "min_panel": "medium" },
+    { "id": "c2", "type": "status_indicator", "bind_tag": "Motor_1_RunStatus",
+      "priority": 2, "size_hint": "compact", "min_panel": "small" }
+  ],
+  "permissions": { "mode": "read_only" }
+}

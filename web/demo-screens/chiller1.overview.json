@@ -1,0 +1,87 @@
+{
+  "screen_id": "gen_a9f3k2",
+  "title": "Chiller 1, Night Shift Overview",
+  "asset_id": "plant.utilities.chiller1",
+  "context_version": "chiller1@v1",
+  "components": [
+    {
+      "id": "c1",
+      "type": "alarm_banner",
+      "bind_alarms": [
+        "ALM_HP01",
+        "ALM_LR01",
+        "ALM_CT01"
+      ],
+      "priority": 1,
+      "size_hint": "wide",
+      "min_panel": "small"
+    },
+    {
+      "id": "c2",
+      "type": "status_indicator",
+      "bind_tag": "Compressor_RunStatus",
+      "priority": 2,
+      "size_hint": "compact",
+      "min_panel": "small"
+    },
+    {
+      "id": "c3",
+      "type": "gauge",
+      "bind_tag": "Condenser_Pressure",
+      "priority": 3,
+      "size_hint": "medium",
+      "min_panel": "small"
+    },
+    {
+      "id": "c4",
+      "type": "gauge",
+      "bind_tag": "Evaporator_Pressure",
+      "priority": 4,
+      "size_hint": "medium",
+      "min_panel": "small"
+    },
+    {
+      "id": "c5",
+      "type": "gauge",
+      "bind_tag": "Chilled_Water_Supply_Temp",
+      "priority": 5,
+      "size_hint": "medium",
+      "min_panel": "small"
+    },
+    {
+      "id": "c6",
+      "type": "gauge",
+      "bind_tag": "Chilled_Water_Return_Temp",
+      "priority": 6,
+      "size_hint": "medium",
+      "min_panel": "small"
+    },
+    {
+      "id": "c7",
+      "type": "gauge",
+      "bind_tag": "Refrigerant_Level_PV",
+      "priority": 7,
+      "size_hint": "medium",
+      "min_panel": "small"
+    },
+    {
+      "id": "c8",
+      "type": "comms_health",
+      "bind_device": "BMS_Gateway",
+      "priority": 8,
+      "size_hint": "medium",
+      "min_panel": "small"
+    },
+    {
+      "id": "c9",
+      "type": "comms_health",
+      "bind_device": "Compressor_VFD",
+      "priority": 9,
+      "size_hint": "medium",
+      "min_panel": "small"
+    }
+  ],
+  "permissions": {
+    "mode": "read_only"
+  }
+}

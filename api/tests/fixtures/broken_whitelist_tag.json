@@ -1,0 +1,13 @@
+{
+  "screen_id": "broken_whitelist_tag",
+  "title": "Conveyor A, bogus tag binding",
+  "asset_id": "line1.conveyorA",
+  "context_version": "conveyorA@v3",
+  "components": [
+    { "id": "c1", "type": "status_indicator", "bind_tag": "Motor_1_RunStatus",
+      "priority": 1, "size_hint": "compact", "min_panel": "small" },
+    { "id": "c2", "type": "gauge", "bind_tag": "Motr_Speed",
+      "priority": 2, "size_hint": "medium", "min_panel": "small" }
+  ],
+  "permissions": { "mode": "read_only" }
+}

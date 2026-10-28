@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+
+  --bg: #0c0f13;
+  --surface: #151a21;
+  --cell: #1b2129;
+  --cell-border: #2b333d;
+  --bezel: #05070a;
+  --text: #eef2f6;
+  --text-muted: #9aa6b3;
+  --text-faint: #66727f;
+  --track: #2f3843;
+  /* Normal-state value marks (gauge arc, trend line, status dot). Never a hue. */
+  --neutral-fill: #d6dde5;
+
+  /* Colour on a rendered screen is reserved for alarm severity
+     (machine context alarms[].priority). Nothing else gets a hue. */
+  --sev-1: #ff453a; /* Critical */
+  --sev-2: #ff9f0a; /* High */
+  --sev-3: #ffd60a; /* Warning */
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-cell: var(--cell);
+  --color-cell-border: var(--cell-border);
+  --color-bezel: var(--bezel);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-faint: var(--text-faint);
+  --color-track: var(--track);
+  --color-neutral-fill: var(--neutral-fill);
+  --color-sev-1: var(--sev-1);
+  --color-sev-2: var(--sev-2);
+  --color-sev-3: var(--sev-3);
+  --color-sev-4: var(--sev-4);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.numeral {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes sf-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.sf-pulse {
+  animation: sf-pulse 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-pulse {
+    animation: none;
+  }
+}

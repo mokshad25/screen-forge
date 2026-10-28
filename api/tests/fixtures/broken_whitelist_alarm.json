@@ -1,0 +1,11 @@
+{
+  "screen_id": "broken_whitelist_alarm",
+  "title": "Conveyor A, bogus alarm binding",
+  "asset_id": "line1.conveyorA",
+  "context_version": "conveyorA@v3",
+  "components": [
+    { "id": "c1", "type": "alarm_banner", "bind_alarms": ["ALM_HT01", "ALM_NOPE99"],
+      "priority": 1, "size_hint": "wide", "min_panel": "small" }
+  ],
+  "permissions": { "mode": "read_only" }
+}

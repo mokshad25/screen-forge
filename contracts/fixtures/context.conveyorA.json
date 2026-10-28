@@ -1,0 +1,29 @@
+{
+  "asset_id": "line1.conveyorA",
+  "context_version": "conveyorA@v3",
+  "asset_hierarchy": ["Plant", "Line 1", "Conveyor A"],
+  "tags": [
+    { "name": "Motor_1_RunStatus", "type": "bool", "access": "read" },
+    { "name": "Conveyor_Speed_SP", "type": "analog", "unit": "m/s", "access": "read" },
+    { "name": "Temperature_PV", "type": "analog", "unit": "degC", "access": "read" },
+    { "name": "Motor_Start", "type": "bool", "access": "write" },
+    { "name": "Pressure_Sensor", "type": "analog", "unit": "bar", "access": "read" },
+    { "name": "PLC1_Health", "type": "bool", "access": "read" },
+    { "name": "VFD1_Health", "type": "bool", "access": "read" }
+  ],
+  "io": {
+    "digital_in": ["Emergency_Stop", "Door_Switch"],
+    "digital_out": ["Motor_Start", "Alarm_Horn"],
+    "analog_in": ["Pressure_Sensor", "Temperature_Sensor"],
+    "analog_out": ["Speed_Reference", "Valve_Position"]
+  },
+  "alarms": [
+    { "id": "ALM_HT01", "desc": "High Temperature", "priority": "Critical", "tag": "Temperature_PV" },
+    { "id": "ALM_LP01", "desc": "Low Pressure", "priority": "Warning", "tag": "Pressure_Sensor" },
+    { "id": "ALM_MT01", "desc": "Motor Trip", "priority": "High", "tag": "Motor_1_RunStatus" }
+  ],
+  "comms": [
+    { "device": "PLC1", "protocol": "Modbus TCP", "endpoint": "10.10.1.20", "health_tag": "PLC1_Health" },
+    { "device": "VFD1", "protocol": "EtherNet/IP", "endpoint": "10.10.1.30", "health_tag": "VFD1_Health" }
+  ]
+}

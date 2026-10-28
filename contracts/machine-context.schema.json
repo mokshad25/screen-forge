@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ScreenForge Machine Context",
+  "type": "object",
+  "required": ["asset_id", "context_version", "asset_hierarchy", "tags", "io", "alarms", "comms"],
+  "additionalProperties": false,
+  "properties": {
+    "asset_id": { "type": "string" },
+    "context_version": { "type": "string" },
+    "asset_hierarchy": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type", "access"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string", "enum": ["bool", "analog"] },
+          "unit": { "type": "string" },
+          "access": { "type": "string", "enum": ["read", "write"] }
+        }
+      }
+    },
+    "io": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "digital_in": { "type": "array", "items": { "type": "string" } },
+        "digital_out": { "type": "array", "items": { "type": "string" } },
+        "analog_in": { "type": "array", "items": { "type": "string" } },
+        "analog_out": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "alarms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "desc", "priority", "tag"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "desc": { "type": "string" },
+          "priority": { "type": "string", "enum": ["Critical", "High", "Warning"] },
+          "tag": { "type": "string" }
+        }
+      }
+    },
+    "comms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["device", "protocol", "endpoint", "health_tag"],
+        "additionalProperties": false,
+        "properties": {
+          "device": { "type": "string" },
+          "protocol": { "type": "string" },
+          "endpoint": { "type": "string" },
+          "health_tag": { "type": "string" }
+        }
+      }
+    }
+  }
+}

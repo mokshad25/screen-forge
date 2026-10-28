@@ -1,0 +1,11 @@
+{
+  "screen_id": "valid_nav_tile",
+  "title": "Conveyor A, jump to chiller",
+  "asset_id": "line1.conveyorA",
+  "context_version": "conveyorA@v3",
+  "components": [
+    { "id": "c1", "type": "nav_tile", "bind_asset": "plant.utilities.chiller1",
+      "priority": 1, "size_hint": "compact", "min_panel": "small" }
+  ],
+  "permissions": { "mode": "read_only" }
+}

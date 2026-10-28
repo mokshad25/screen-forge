@@ -1,0 +1,31 @@
+{
+  "asset_id": "plant.utilities.chiller1",
+  "context_version": "chiller1@v1",
+  "asset_hierarchy": ["Plant", "Utilities", "Chiller 1"],
+  "tags": [
+    { "name": "Compressor_RunStatus", "type": "bool", "access": "read" },
+    { "name": "Chilled_Water_Supply_Temp", "type": "analog", "unit": "degC", "access": "read" },
+    { "name": "Chilled_Water_Return_Temp", "type": "analog", "unit": "degC", "access": "read" },
+    { "name": "Condenser_Pressure", "type": "analog", "unit": "bar", "access": "read" },
+    { "name": "Evaporator_Pressure", "type": "analog", "unit": "bar", "access": "read" },
+    { "name": "Compressor_Start", "type": "bool", "access": "write" },
+    { "name": "Refrigerant_Level_PV", "type": "analog", "unit": "%", "access": "read" },
+    { "name": "BMS_Comm_Health", "type": "bool", "access": "read" },
+    { "name": "VFD_Comm_Health", "type": "bool", "access": "read" }
+  ],
+  "io": {
+    "digital_in": ["Low_Refrigerant_Switch", "Flow_Switch"],
+    "digital_out": ["Compressor_Start", "Alarm_Horn"],
+    "analog_in": ["Condenser_Pressure_Sensor", "Evaporator_Pressure_Sensor"],
+    "analog_out": ["Compressor_Speed_Reference"]
+  },
+  "alarms": [
+    { "id": "ALM_HP01", "desc": "High Condenser Pressure", "priority": "Critical", "tag": "Condenser_Pressure" },
+    { "id": "ALM_LR01", "desc": "Low Refrigerant Level", "priority": "High", "tag": "Refrigerant_Level_PV" },
+    { "id": "ALM_CT01", "desc": "Compressor Trip", "priority": "High", "tag": "Compressor_RunStatus" }
+  ],
+  "comms": [
+    { "device": "BMS_Gateway", "protocol": "OPC UA", "endpoint": "10.10.2.10", "health_tag": "BMS_Comm_Health" },
+    { "device": "Compressor_VFD", "protocol": "Modbus TCP", "endpoint": "10.10.2.20", "health_tag": "VFD_Comm_Health" }
+  ]
+}
