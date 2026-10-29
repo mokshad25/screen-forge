@@ -121,8 +121,11 @@ export function AlarmToasts({
   onDismiss: (e: AlarmEvent) => void;
 }) {
   if (!events.length) return null;
+  // On wide screens the alarm list sits under the top-right corner, and its
+  // newest alarm (with its Acknowledge button) is at the top. Toasts go to the
+  // bottom of that column so they never cover it.
   return (
-    <div className="pointer-events-none fixed right-2.5 top-14 z-40 flex w-[320px] flex-col gap-2" aria-live="assertive">
+    <div className="pointer-events-none fixed right-2.5 top-14 z-40 flex w-[320px] flex-col gap-2 lg:bottom-3 lg:top-auto" aria-live="assertive">
       {events.slice(-2).reverse().map((e) => (
         <div key={`${e.asset_id}/${e.alarm_id}/${e.ts}`}
           className="sf-arrive pointer-events-auto border border-ink bg-well p-3 shadow-[4px_4px_0_var(--ink)]">
