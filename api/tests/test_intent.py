@@ -120,6 +120,14 @@ CONTROL = [
     # a real control request through.
     "let me stop the belt",
     "please stop the motor",
+    # Round five: verbs the list didn't have, and wanting the machine to act.
+    "please halt conveyor A",
+    "trip the compressor",
+    "isolate the pump",
+    "deactivate motor 1",
+    "de-energise the conveyor motor",
+    "I want the belt to stop",
+    "we need the compressor to start again",
 ]
 
 # Must NOT be refused: these only look like commands. Every one of these
@@ -190,6 +198,14 @@ NOT_CONTROL = [
     "increase the size of the temperature gauge",
     "temperature has been creeping up all shift, show me how it is trended",
     "belt speed and pressure please, big numbers",
+    # Round five: "trip" as a noun, and wanting the SCREEN to do something.
+    "trip count for the compressor",
+    "show me the compressor trip history",
+    "trip alarms on the conveyor",
+    "why did the compressor trip?",
+    "isolate condenser pressure on its own trend",
+    "I want the trend to start at midnight",
+    "I want to see when the belt stopped",
 ]
 
 

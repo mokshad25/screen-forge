@@ -99,7 +99,8 @@ _CONTROL_VERBS = (
     r"start|stop|restart|set|change|adjust|increase|decrease|raise|lower|"
     r"drop|bump|open|close|reset|enable|disable|turn|override|ramp|jog|"
     r"switch|shut|kill|toggle|clear|acknowledge|ack|silence|put|"
-    r"hit|press|push|engage|activate)"
+    r"hit|press|push|engage|activate|deactivate|halt|trip|isolate|"
+    r"de-?energi[sz]e|energi[sz]e)"
 )
 
 # Phrases where a control verb is a NOUN naming a signal, not an action being
@@ -115,8 +116,14 @@ _CONTROL_VERBS = (
 # Only the NOUN forms are stripped. "emergency stop" is deliberately NOT here:
 # "emergency stop the conveyor" is an instruction, while "the e-stop" names a
 # signal. "close-up" gets the same treatment -- it's a noun ("close-up of the
-# refrigerant level"), not the verb "close".
-_NOT_A_COMMAND = re.compile(r"\b(?:e[-\s]?stop|close[-\s]?up)\b", re.IGNORECASE)
+# refrigerant level"), not the verb "close". "trip" is a verb ("trip the
+# compressor") and a noun ("trip count", "the trip alarm"); only the noun
+# phrases are stripped.
+_NOT_A_COMMAND = re.compile(
+    r"\b(?:e[-\s]?stop|close[-\s]?up|"
+    r"trips?\s+(?:count|history|alarms?|status|log|events?|reasons?|data|signal))\b",
+    re.IGNORECASE,
+)
 
 # Every control verb above is also an ordinary verb for working a SCREEN:
 # you open an overview, close a banner, set a panel size, reset a view. What
@@ -144,7 +151,7 @@ _STATE_CHANGING_VERBS = {
     "reset", "clear", "acknowledge", "ack", "silence", "start", "stop",
     "restart", "enable", "disable", "override", "jog", "ramp",
     "switch", "shut", "kill", "toggle", "hit", "press", "push", "engage",
-    "activate",
+    "activate", "deactivate", "halt", "trip", "isolate",
 }
 
 # Words that turn "can you ... <verb>" into a question about the machine
@@ -194,6 +201,10 @@ _VERB_PATTERNS = [
     r"\b(?:i|we)\s+(?:need|want)\b[^.?!]{0,30}?"
     r"\b(?:running|started|stopped|restarted|back on|switched on|turned on|"
     r"off|shut down|powered down)\b",
+    # Wanting the machine to DO something: "I want the belt to stop". The
+    # object sits between "want" and the verb, so the object check still
+    # lets "I want the trend to start at midnight" through.
+    rf"\b(?:i|we)\s+(?:need|want)\b[^.?!]{{0,30}}?\bto\s+{_CONTROL_VERBS}\b",
 ]
 
 # Patterns that name a control AFFORDANCE outright: "give me a start button",
