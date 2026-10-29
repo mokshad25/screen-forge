@@ -133,3 +133,20 @@ def test_removed_tags_are_called_out_as_unbindable():
 
     assert "No longer available" in seen["user"]
     assert "Condenser_Pressure" in seen["user"].split("No longer available")[1]
+
+
+def test_a_comparison_trend_on_screen_is_kept_when_regenerating():
+    """multi_trend binds bind_tags, not bind_tag; it must still be listed as on screen."""
+    reconciler.bump_context(CHILLER)
+    fake_llm, seen = _capture_prompt()
+    previous = {"components": [{
+        "id": "c1", "type": "multi_trend", "priority": 1, "size_hint": "wide",
+        "bind_tags": ["Condenser_Pressure", "Evaporator_Pressure"],
+    }]}
+
+    generator.generate_and_validate(
+        "chiller overview", CHILLER, "large", llm_fn=fake_llm,
+        since_context_version="chiller1@v1", previous_spec=previous,
+    )
+
+    assert "multi_trend(Condenser_Pressure, Evaporator_Pressure)" in seen["user"]

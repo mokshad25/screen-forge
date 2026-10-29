@@ -368,7 +368,7 @@ def _describe_binding(component: dict) -> str:
         component.get("bind_tag")
         or component.get("bind_device")
         or component.get("bind_asset")
-        or ", ".join(component.get("bind_alarms") or [])
+        or ", ".join(component.get("bind_tags") or component.get("bind_alarms") or [])
     )
     return f"{component.get('type')}({binding})"
 
@@ -399,11 +399,13 @@ def _keep_what_is_onscreen_note(previous_spec: dict | None, current: dict) -> st
             or ""
         )
         alarms = component.get("bind_alarms") or []
+        tags = component.get("bind_tags") or []
         if (
             binding in known_tags
             or binding in known_devices
             or binding in context_store.list_asset_ids()
             or (alarms and all(a in known_alarms for a in alarms))
+            or (tags and all(t in known_tags for t in tags))
         ):
             still_there.append(_describe_binding(component))
 
